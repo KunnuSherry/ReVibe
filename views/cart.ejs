@@ -788,7 +788,8 @@
     </script>
     <script>
         // Calculate total amount including shipping and tax
-        const totalAmount = parseFloat('<%= (totalPrice + 50 + 10)/80 %>');
+        // Assuming prices are in INR and converting to USD (INR to USD rate ~ 80)
+        const totalAmount = parseFloat('<%= ((totalPrice + 50 + 10) / 80).toFixed(2) %>');
         const cartItemsData = <%- JSON.stringify(cartItems) %>;
 
         // Initialize PayPal button
