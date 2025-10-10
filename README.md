@@ -1,6 +1,6 @@
 <h1 align="center">♻️ <em>Revibe - Sustainable E-commerce Platform</em> 🌍</h1>
 <p align="center">
-  🌐 <a href="https://revibe-neon.vercel.app/" target="_blank">Live Demo</a>
+  🌐 <a href="https://re-vibe-coral.vercel.app/" target="_blank">Live Demo</a>
 </p>
 
 <div align="center">
