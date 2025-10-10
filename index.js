@@ -518,6 +518,36 @@ app.get('/adminAnayltics', (req,res)=>{
     res.render('adminAnalytics')
 })
 
+// Development-only password reset endpoint
+// Allows resetting a user's password by email when not in production
+app.post('/dev/reset-password', async (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Forbidden in production' });
+    }
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+        await user.save();
+
+        return res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+        console.error('Password reset error:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Add to cart route
 app.post('/cart/add', isLoggedIn, async (req, res) => {
     console.log('Add to cart request received');
