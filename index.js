@@ -1,4 +1,5 @@
 // Importing the Libraries Required
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -6,13 +7,18 @@ const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const session = require('express-session');
+const connectDB = require('./config/db');
 const User = require('./models/userModel'); // Your Mongoose model
 const Product = require('./models/productModel');
 const { isValidPassword, generateOtp } = require('./utils');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
-require('dotenv').config();
+
+// Connect to MongoDB before starting server
+connectDB().catch(err => {
+    console.error("Failed to connect to MongoDB:", err);
+});
 
 // Configure Cloudinary
 cloudinary.config({
@@ -41,6 +47,17 @@ app.use(session({
     resave: false,
     saveUninitialized: false
 }));
+
+// Middleware to ensure MongoDB connection before handling requests (for serverless)
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        console.error('Database connection error in middleware:', error);
+        res.status(500).send('Database connection failed');
+    }
+});
 
 // Middleware to check admin authentication
 const isAdmin = (req, res, next) => {
@@ -685,9 +702,15 @@ app.post('/process-payment', isLoggedIn, async (req, res) => {
     }
 });
 
-// Start the server
+// Start the server (only in non-serverless environments)
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV}`);
-});
+if (require.main === module) {
+    app.listen(PORT, async () => {
+        await connectDB(); // Ensure connection on server start
+        console.log(`Server is running on port ${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV}`);
+    });
+}
+
+// Export for Vercel serverless
+module.exports = app;
